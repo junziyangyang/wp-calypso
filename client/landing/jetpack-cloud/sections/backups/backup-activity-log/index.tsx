@@ -52,14 +52,14 @@ const BackupActivityLogPage: FunctionComponent< Props > = ( {
 	const siteSlug = useSelector( getSelectedSiteSlug );
 	const logs = useSelector( () => getHttpData( getRequestActivityLogsId( siteId, filter ) ).data );
 
-	const onDateRangeChange = ( newAfterDate: string, newBeforeDate: string ) => {
-		page(
-			addQueryArgs(
-				{ ...filter, after: newAfterDate, before: newBeforeDate, group },
-				backupActivityPath( siteSlug )
-			)
-		);
-	};
+	// const onDateRangeChange = ( newAfterDate: string, newBeforeDate: string ) => {
+	// 	page(
+	// 		addQueryArgs(
+	// 			{ ...filter, after: newAfterDate, before: newBeforeDate, group },
+	// 			backupActivityPath( siteSlug )
+	// 		)
+	// 	);
+	// };
 
 	const onGroupChange = ( newGroup: string[] ) => {
 		page(
@@ -67,11 +67,11 @@ const BackupActivityLogPage: FunctionComponent< Props > = ( {
 		);
 	};
 
-	const onPageChange = ( newPageNumber: number ) => {
-		page(
-			addQueryArgs( { ...filter, page: newPageNumber, group }, backupActivityPath( siteSlug ) )
-		);
-	};
+	// const onPageChange = ( newPageNumber: number ) => {
+	// 	page(
+	// 		addQueryArgs( { ...filter, page: newPageNumber, group }, backupActivityPath( siteSlug ) )
+	// 	);
+	// };
 
 	// when the filter changes, re-request the logs
 	useEffect( () => {
@@ -91,7 +91,11 @@ const BackupActivityLogPage: FunctionComponent< Props > = ( {
 						) }
 					</p>
 				</div>
-				<FilterBar filter={ filter } />
+				<FilterBar
+					group={ group || [] }
+					onGroupChange={ onGroupChange }
+					showDateRangeSelector={ false }
+				/>
 				{ /* placeholder rendering */ }
 				<p>{ `logs length: ${ logs && logs.length}` }</p>
 			</div>
