@@ -30,6 +30,17 @@ import contactSupportUrl from 'landing/jetpack-cloud/lib/contact-support-url';
 import './style.scss';
 
 class ScanPage extends Component {
+	renderPlaceholder() {
+		return (
+			<>
+				<SecurityIcon icon="placeholder" />
+				<h1 className="scan__header is-placeholder">Scan Result heading</h1>
+				<p className="scan__content is-placeholder">This is some placeholder text there.</p>
+				<p className="scan__content is-placeholder">This is some placeholder text there.</p>
+			</>
+		);
+	}
+
 	renderScanOkay() {
 		const { siteSlug, moment, lastScanTimestamp } = this.props;
 
@@ -99,7 +110,7 @@ class ScanPage extends Component {
 	renderScanState() {
 		const { site, scanState } = this.props;
 		if ( ! scanState ) {
-			return <div className="scan__is-loading" />;
+			return this.renderPlaceholder();
 		}
 
 		const status = scanState.state;
