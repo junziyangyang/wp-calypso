@@ -10,7 +10,3 @@ export function updateDependencies( dependencies ) {
 export function resetSignup() {
 	return { type: SIGNUP_COMPLETE_RESET };
 }
-
-export function resetStepSignup( steps ) {
-	return { type: SIGNUP_COMPLETE_RESET, steps };
-}

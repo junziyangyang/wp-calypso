@@ -450,6 +450,8 @@ export class Checkout extends React.Component {
 
 		const { cart, selectedSiteSlug, previousRoute } = this.props;
 
+		// If the user has upgraded a plan from seeing our upsell (we find this by checking the previous route is /offer-plan-upgrade),
+		// then skip this section so that we do not show further upsells.
 		if (
 			config.isEnabled( 'upsell/concierge-session' ) &&
 			! hasConciergeSession( cart ) &&
@@ -570,7 +572,6 @@ export class Checkout extends React.Component {
 		}
 
 		const redirectPathForConciergeUpsell = this.maybeRedirectToConciergeNudge( pendingOrReceiptId );
-
 		if ( redirectPathForConciergeUpsell ) {
 			return redirectPathForConciergeUpsell;
 		}
