@@ -39,6 +39,7 @@ export const UpsellNudge = ( {
 	forceDisplay,
 	forceHref,
 	href,
+	horizontal,
 	icon,
 	jetpack,
 	isVip,
@@ -92,6 +93,7 @@ export const UpsellNudge = ( {
 			feature={ feature }
 			forceHref={ forceHref }
 			href={ href }
+			horizontal={ horizontal }
 			icon={ icon }
 			jetpack={ jetpack }
 			list={ list }
