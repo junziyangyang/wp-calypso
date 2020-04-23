@@ -35,6 +35,9 @@
 	.banner__description {
 		color: var( --color-neutral-5 );
 	}
+	.banner__info {
+		margin-right: 5px;
+	}
 	.banner__info .banner__title {
 		color: var( --color-text-inverted );
 		font-weight: normal;
@@ -69,6 +72,10 @@
 	}
 }
 
+.upsell-nudge .banner__info {
+	margin-right: 20px;
+}
+
 .upsell-nudge .banner__content {
 	margin-right: auto;
 }
@@ -83,7 +90,7 @@
 }
 
 .upsell-nudge .dismissible-card__close-icon {
-	margin-left: 1em;
+	margin-left: 1.25em;
 	order: 2;
 
 	@include breakpoint( '>480px' ) {
