@@ -25,7 +25,10 @@ import './style.scss';
 
 const AcquireIntent: React.FunctionComponent = () => {
 	const { __ } = useI18n();
-	const { siteVertical, siteTitle } = useSelect( ( select ) => select( STORE_KEY ).getState() );
+
+	const onboardingStore = useSelect( ( select ) => select( STORE_KEY ) );
+
+	const { siteVertical, siteTitle } = onboardingStore.getState();
 	const makePath = usePath();
 
 	const [ isSiteTitleActive, setIsSiteTitleActive ] = React.useState( false );
@@ -34,7 +37,10 @@ const AcquireIntent: React.FunctionComponent = () => {
 	const displaySiteTitle = isSiteTitleActive || ! isMobile;
 	const displayVerticalSelect = ! isSiteTitleActive || ! isMobile;
 
-	useTrackStep( 'IntentGathering' );
+	useTrackStep( 'IntentGathering', () => ( {
+		selected_vertical: onboardingStore.getSelectedVertical()?.slug,
+		selected_site_title: onboardingStore.getSelectedSiteTitle()
+	} ) );
 
 	return (
 		<div

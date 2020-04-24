@@ -87,7 +87,8 @@ const DomainPicker: FunctionComponent< Props > = ( {
 	const { __, i18nLocale } = useI18n();
 	const label = __( 'Search for a domain' );
 
-	const { domainSearch } = useSelect( ( select ) => select( STORE_KEY ).getState() );
+	const onboardingStore = useSelect( ( select ) => select( STORE_KEY ) );
+	const { domainSearch } = onboardingStore.getState();
 	const { setDomainSearch } = useDispatch( STORE_KEY );
 
 	const allSuggestions = useDomainSuggestions( { locale: i18nLocale } );
@@ -122,7 +123,9 @@ const DomainPicker: FunctionComponent< Props > = ( {
 		}
 	}, [ allSuggestions ] );
 
-	useTrackModal( 'DomainPicker' );
+	useTrackModal( 'DomainPicker', () => ( {
+		selected_domain: onboardingStore.getSelectedDomain(),
+	} ) );
 
 	return (
 		<Panel className="domain-picker">
