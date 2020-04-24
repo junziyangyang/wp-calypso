@@ -14,7 +14,7 @@ import {
 	removeItemFromRequestCart,
 	replaceItemInResponseCart,
 	processRawResponse,
-	addCouponToResponseCart,
+	addCouponToRequestCart,
 	removeCouponFromRequestCart,
 	addLocationToResponseCart,
 	doesCartLocationDifferFromResponseCartLocation,
@@ -27,7 +27,6 @@ import {
 import {
 	convertResponseCartToRequestCart,
 	addItemToRequestCart,
-	addCouponToRequestCart,
 } from '../types/backend/shopping-cart-endpoint';
 import { translateWpcomCartToCheckoutCart } from '../lib/translate-cart';
 
@@ -189,8 +188,10 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
-				// TODO: use requestCart instead
-				responseCart: addCouponToResponseCart( state.responseCart, newCoupon ),
+				requestCart: addCouponToRequestCart(
+					state.requestCart || convertResponseCartToRequestCart( state.responseCart ),
+					newCoupon
+				),
 				couponStatus: 'pending',
 				cacheStatus: 'invalid',
 			};

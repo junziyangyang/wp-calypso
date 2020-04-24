@@ -1,9 +1,9 @@
 /**
  * Internal dependencies
  */
-import { removeItemFromRequestCart, addCouponToResponseCart } from '../types';
+import { removeItemFromResponseCart, addCouponToRequestCart } from '../types';
 
-describe( 'removeItemFromRequestCart', function () {
+describe( 'removeItemFromResponseCart', function () {
 	const baseResponseCart = {
 		total_tax_integer: 0,
 		total_tax_display: '$0',
@@ -56,7 +56,7 @@ describe( 'removeItemFromRequestCart', function () {
 			],
 		};
 
-		const result = removeItemFromRequestCart( responseCart, '0' );
+		const result = removeItemFromResponseCart( responseCart, '0' );
 
 		it( 'has expected array of uuids', function () {
 			expect( result.products.map( ( product ) => product.uuid ) ).toEqual( [ '1' ] );
@@ -96,7 +96,7 @@ describe( 'removeItemFromRequestCart', function () {
 			],
 		};
 
-		const result = removeItemFromRequestCart( responseCart, '2' );
+		const result = removeItemFromResponseCart( responseCart, '2' );
 
 		it( 'has expected array of uuids', function () {
 			expect( result.products.map( ( product ) => product.uuid ) ).toEqual( [ '0', '1' ] );
@@ -104,7 +104,7 @@ describe( 'removeItemFromRequestCart', function () {
 	} );
 } );
 
-describe( 'addCouponToResponseCart', function () {
+describe( 'addCouponToRequestCart', function () {
 	const responseCart = {
 		products: [],
 		total_tax_integer: 0,
@@ -125,7 +125,7 @@ describe( 'addCouponToResponseCart', function () {
 		},
 	};
 
-	const result = addCouponToResponseCart( responseCart, 'fakecoupon' );
+	const result = addCouponToRequestCart( responseCart, 'fakecoupon' );
 
 	it( 'has the expected coupon', function () {
 		expect( result.coupon ).toEqual( 'fakecoupon' );

@@ -180,14 +180,6 @@ export function addCouponToRequestCart( cart: RequestCart, couponToAdd: string )
 	};
 }
 
-export function addCouponToResponseCart( cart: ResponseCart, couponToAdd: string ): ResponseCart {
-	return {
-		...cart,
-		coupon: couponToAdd,
-		is_coupon_applied: false,
-	};
-}
-
 export function removeCouponFromRequestCart( cart: RequestCart ): RequestCart {
 	return {
 		...cart,
