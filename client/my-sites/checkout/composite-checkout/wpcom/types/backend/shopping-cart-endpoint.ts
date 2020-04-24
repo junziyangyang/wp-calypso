@@ -163,10 +163,7 @@ export function convertResponseCartToRequestCart( {
 	} as RequestCart;
 }
 
-export function removeItemFromResponseCart(
-	cart: ResponseCart,
-	uuidToRemove: string
-): ResponseCart {
+export function removeItemFromRequestCart( cart: RequestCart, uuidToRemove: string ): ResponseCart {
 	return {
 		...cart,
 		products: cart.products.filter( ( product ) => {

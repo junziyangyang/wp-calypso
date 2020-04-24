@@ -1,9 +1,9 @@
 /**
  * Internal dependencies
  */
-import { removeItemFromResponseCart, addCouponToResponseCart } from '../types';
+import { removeItemFromRequestCart, addCouponToResponseCart } from '../types';
 
-describe( 'removeItemFromResponseCart', function () {
+describe( 'removeItemFromRequestCart', function () {
 	const baseResponseCart = {
 		total_tax_integer: 0,
 		total_tax_display: '$0',
@@ -56,7 +56,7 @@ describe( 'removeItemFromResponseCart', function () {
 			],
 		};
 
-		const result = removeItemFromResponseCart( responseCart, '0' );
+		const result = removeItemFromRequestCart( responseCart, '0' );
 
 		it( 'has expected array of uuids', function () {
 			expect( result.products.map( ( product ) => product.uuid ) ).toEqual( [ '1' ] );
@@ -96,7 +96,7 @@ describe( 'removeItemFromResponseCart', function () {
 			],
 		};
 
-		const result = removeItemFromResponseCart( responseCart, '2' );
+		const result = removeItemFromRequestCart( responseCart, '2' );
 
 		it( 'has expected array of uuids', function () {
 			expect( result.products.map( ( product ) => product.uuid ) ).toEqual( [ '0', '1' ] );

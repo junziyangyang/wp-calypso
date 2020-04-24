@@ -11,7 +11,7 @@ import {
 	ResponseCart,
 	ResponseCartProduct,
 	emptyResponseCart,
-	removeItemFromResponseCart,
+	removeItemFromRequestCart,
 	replaceItemInResponseCart,
 	processRawResponse,
 	addCouponToResponseCart,
@@ -107,8 +107,10 @@ function shoppingCartHookReducer(
 			debug( 'removing item from cart with uuid', uuidToRemove );
 			return {
 				...state,
-				// TODO: use requestCart instead
-				responseCart: removeItemFromResponseCart( state.responseCart, uuidToRemove ),
+				requestCart: removeItemFromRequestCart(
+					state.requestCart || convertResponseCartToRequestCart( state.responseCart ),
+					uuidToRemove
+				),
 				cacheStatus: 'invalid',
 			};
 		}

@@ -21,7 +21,7 @@ import type {
 } from './types/backend/shopping-cart-endpoint';
 import {
 	emptyResponseCart,
-	removeItemFromResponseCart,
+	removeItemFromRequestCart,
 	replaceItemInResponseCart,
 	addCouponToResponseCart,
 	removeCouponFromResponseCart,
@@ -90,7 +90,7 @@ export {
 	translateWpcomPaymentMethodToCheckoutPaymentMethod,
 	translateCheckoutPaymentMethodToWpcomPaymentMethod,
 	emptyResponseCart,
-	removeItemFromResponseCart,
+	removeItemFromRequestCart,
 	replaceItemInResponseCart,
 	addCouponToResponseCart,
 	removeCouponFromResponseCart,
