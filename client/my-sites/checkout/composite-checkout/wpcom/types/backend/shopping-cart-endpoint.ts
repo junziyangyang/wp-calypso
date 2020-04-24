@@ -143,10 +143,14 @@ export const prepareRequestCartProduct: ( ResponseCartProduct ) => RequestCartPr
 	} as RequestCartProduct;
 };
 
-export const prepareRequestCart: ( ResponseCart, RequestCartOptions ) => RequestCart = (
-	{ products, currency, locale, coupon, is_coupon_applied, tax }: ResponseCart,
-	{ is_update = false }: RequestCartOptions
-) => {
+export function convertResponseCartToRequestCart( {
+	products,
+	currency,
+	locale,
+	coupon,
+	is_coupon_applied,
+	tax,
+}: ResponseCart ): RequestCart {
 	return {
 		products: products.map( prepareRequestCartProduct ),
 		currency,
@@ -155,10 +159,9 @@ export const prepareRequestCart: ( ResponseCart, RequestCartOptions ) => Request
 		is_coupon_applied,
 		temporary: false,
 		tax,
-		is_update,
 		extra: '', // TODO: fix this
 	} as RequestCart;
-};
+}
 
 export function removeItemFromResponseCart(
 	cart: ResponseCart,
