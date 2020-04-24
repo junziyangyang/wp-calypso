@@ -22,7 +22,6 @@ import type {
 import {
 	emptyResponseCart,
 	removeItemFromResponseCart,
-	addItemToResponseCart,
 	replaceItemInResponseCart,
 	addCouponToResponseCart,
 	removeCouponFromResponseCart,
@@ -92,7 +91,6 @@ export {
 	translateCheckoutPaymentMethodToWpcomPaymentMethod,
 	emptyResponseCart,
 	removeItemFromResponseCart,
-	addItemToResponseCart,
 	replaceItemInResponseCart,
 	addCouponToResponseCart,
 	removeCouponFromResponseCart,

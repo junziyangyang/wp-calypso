@@ -259,35 +259,6 @@ export function addItemToRequestCart(
 	};
 }
 
-export function addItemToResponseCart(
-	responseCart: ResponseCart,
-	product: ResponseCartProduct
-): ResponseCart {
-	const uuid = getFreshCartItemUUID( responseCart );
-	const newProductItem = addUUIDToResponseCartProduct( product, uuid );
-	return {
-		...responseCart,
-		products: [ ...responseCart.products, newProductItem ],
-	};
-}
-
-function getFreshCartItemUUID( responseCart: ResponseCart ): string {
-	const maxUUID = responseCart.products
-		.map( ( product ) => product.uuid )
-		.reduce( ( accum, current ) => ( accum > current ? accum : current) , '' );
-	return maxUUID + '1';
-}
-
-function addUUIDToResponseCartProduct(
-	product: ResponseCartProduct,
-	uuid: string
-): ResponseCartProduct {
-	return {
-		...product,
-		uuid,
-	};
-}
-
 export function replaceItemInResponseCart(
 	responseCart: ResponseCart,
 	uuidToReplace: string,
