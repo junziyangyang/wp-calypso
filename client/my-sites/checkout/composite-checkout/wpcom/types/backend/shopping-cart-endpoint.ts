@@ -188,10 +188,7 @@ export function removeCouponFromRequestCart( cart: RequestCart ): RequestCart {
 	};
 }
 
-export function addLocationToResponseCart(
-	cart: ResponseCart,
-	location: CartLocation
-): ResponseCart {
+export function addLocationToRequestCart( cart: RequestCart, location: CartLocation ): RequestCart {
 	return {
 		...cart,
 		tax: {

@@ -16,7 +16,7 @@ import {
 	processRawResponse,
 	addCouponToRequestCart,
 	removeCouponFromRequestCart,
-	addLocationToResponseCart,
+	addLocationToRequestCart,
 	doesCartLocationDifferFromResponseCartLocation,
 	WPCOMCart,
 	WPCOMCartItem,
@@ -253,8 +253,10 @@ function shoppingCartHookReducer(
 				debug( 'setting location on cart', action.location );
 				return {
 					...state,
-					// TODO: use requestCart instead
-					responseCart: addLocationToResponseCart( state.responseCart, action.location ),
+					requestCart: addLocationToRequestCart(
+						state.requestCart || convertResponseCartToRequestCart( state.responseCart ),
+						action.location
+					),
 					cacheStatus: 'invalid',
 				};
 			}
