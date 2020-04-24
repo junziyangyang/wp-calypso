@@ -8,12 +8,10 @@ import debugFactory from 'debug';
  * Internal dependencies
  */
 import {
-	prepareRequestCart,
 	ResponseCart,
 	ResponseCartProduct,
 	emptyResponseCart,
 	removeItemFromResponseCart,
-	addItemToResponseCart,
 	replaceItemInResponseCart,
 	processRawResponse,
 	addCouponToResponseCart,
@@ -29,6 +27,7 @@ import {
 import {
 	convertResponseCartToRequestCart,
 	addItemToRequestCart,
+	addCouponToRequestCart,
 } from '../types/backend/shopping-cart-endpoint';
 import { translateWpcomCartToCheckoutCart } from '../lib/translate-cart';
 
@@ -561,18 +560,19 @@ function useInitializeCartFromServer(
 						' and coupons',
 						couponToAdd
 					);
-					let updatedResponseCart = processRawResponse( response );
+					let updatedRequestCart = convertResponseCartToRequestCart(
+						processRawResponse( response )
+					);
 					if ( productsToAdd?.length ) {
-						updatedResponseCart = productsToAdd.reduce(
-							// TODO: productToAdd is a RequestCartProduct, so we need to modify this to use a RequestCart
-							( updatedCart, productToAdd ) => addItemToResponseCart( updatedCart, productToAdd ),
-							updatedResponseCart
+						updatedRequestCart = productsToAdd.reduce(
+							( updatedCart, productToAdd ) => addItemToRequestCart( updatedCart, productToAdd ),
+							updatedRequestCart
 						);
 					}
 					if ( couponToAdd ) {
-						updatedResponseCart = addCouponToResponseCart( updatedResponseCart, couponToAdd );
+						updatedRequestCart = addCouponToRequestCart( updatedRequestCart, couponToAdd );
 					}
-					return setServerCart( prepareRequestCart( updatedResponseCart, {} ) );
+					return setServerCart( updatedRequestCart );
 				}
 				return response;
 			} )
