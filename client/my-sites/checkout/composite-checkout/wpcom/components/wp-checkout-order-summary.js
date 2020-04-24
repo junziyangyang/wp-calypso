@@ -11,10 +11,19 @@ import {
 } from '@automattic/composite-checkout';
 import { useTranslate } from 'i18n-calypso';
 
-export default function WPCheckoutOrderSummary() {
+/**
+ * Internal dependencies
+ */
+import CartFreeUserPlanUpsell from 'my-sites/checkout/cart/cart-free-user-plan-upsell';
+
+export default function WPCheckoutOrderSummary( { responseCart, addItemToCart } ) {
 	const translate = useTranslate();
 	const taxes = useLineItemsOfType( 'tax' );
 	const total = useTotal();
+
+	// By this point we have definitely loaded the cart using useShoppingCart
+	// so we mock the loaded property the CartStore would inject.
+	const mockCart = { ...responseCart, hasLoadedFromServer: true };
 
 	return (
 		<>
@@ -46,6 +55,7 @@ export default function WPCheckoutOrderSummary() {
 					<span>{ renderDisplayValueMarkdown( total.amount.displayValue ) }</span>
 				</CheckoutSummaryTotal>
 			</CheckoutSummaryAmountWrapper>
+			<CartFreeUserPlanUpsell cart={ mockCart } addItemToCart={ addItemToCart } />
 		</>
 	);
 }
