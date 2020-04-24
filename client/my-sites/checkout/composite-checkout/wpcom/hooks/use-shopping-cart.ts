@@ -9,7 +9,6 @@ import debugFactory from 'debug';
  */
 import {
 	ResponseCart,
-	ResponseCartProduct,
 	emptyResponseCart,
 	removeItemFromRequestCart,
 	replaceItemInRequestCart,
@@ -76,7 +75,7 @@ const getInitialShoppingCartHookState: () => ShoppingCartHookState = () => {
 
 type ShoppingCartHookAction =
 	| { type: 'REMOVE_CART_ITEM'; uuidToRemove: string }
-	| { type: 'ADD_CART_ITEM'; responseCartProductToAdd: ResponseCartProduct }
+	| { type: 'ADD_CART_ITEM'; requestCartProductToAdd: RequestCartProduct }
 	| { type: 'SET_LOCATION'; location: CartLocation }
 	| {
 			type: 'REPLACE_CART_ITEM';
@@ -417,7 +416,7 @@ type ReactStandardAction = { type: string; payload?: any }; // eslint-disable-li
 export function useShoppingCart(
 	cartKey: string | null,
 	canInitializeCart: boolean,
-	productsToAdd: ResponseCartProduct[] | null,
+	productsToAdd: RequestCartProduct[] | null,
 	couponToAdd: string | null,
 	setCart: ( string, RequestCart ) => Promise< ResponseCart >,
 	getCart: ( string ) => Promise< ResponseCart >,
@@ -529,7 +528,7 @@ export function useShoppingCart(
 function useInitializeCartFromServer(
 	cacheStatus: CacheStatus,
 	canInitializeCart: boolean,
-	productsToAdd: ResponseCartProduct[] | null,
+	productsToAdd: RequestCartProduct[] | null,
 	couponToAdd: string | null,
 	getServerCart: () => Promise< ResponseCart >,
 	setServerCart: ( RequestCart ) => Promise< ResponseCart >,
