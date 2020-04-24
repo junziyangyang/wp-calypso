@@ -22,11 +22,9 @@ import {
 	WPCOMCartCouponItem,
 	CheckoutCartItem,
 	CartLocation,
-} from '../types';
-import {
 	convertResponseCartToRequestCart,
 	addItemToRequestCart,
-} from '../types/backend/shopping-cart-endpoint';
+} from '../types';
 import { translateWpcomCartToCheckoutCart } from '../lib/translate-cart';
 
 const debug = debugFactory( 'composite-checkout-wpcom:shopping-cart-manager' );

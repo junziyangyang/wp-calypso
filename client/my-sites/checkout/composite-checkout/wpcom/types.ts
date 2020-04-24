@@ -28,6 +28,8 @@ import {
 	addLocationToRequestCart,
 	doesCartLocationDifferFromResponseCartLocation,
 	processRawResponse,
+	convertResponseCartToRequestCart,
+	addItemToRequestCart,
 } from './types/backend/shopping-cart-endpoint';
 import type {
 	DomainContactDetails,
@@ -112,6 +114,8 @@ export {
 	formatDomainContactValidationResponse,
 	isValid,
 	areRequiredFieldsNotEmpty,
+	convertResponseCartToRequestCart,
+	addItemToRequestCart,
 };
 
 /* eslint-enable no-duplicate-imports */
