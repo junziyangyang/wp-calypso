@@ -249,6 +249,16 @@ export function processRawResponse( rawResponseCart ): ResponseCart {
 	};
 }
 
+export function addItemToRequestCart(
+	requestCart: RequestCart,
+	product: RequestCartProduct
+): RequestCart {
+	return {
+		...requestCart,
+		products: [ ...requestCart.products, product ],
+	};
+}
+
 export function addItemToResponseCart(
 	responseCart: ResponseCart,
 	product: ResponseCartProduct
