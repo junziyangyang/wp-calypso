@@ -253,15 +253,15 @@ export function addItemToRequestCart(
 	};
 }
 
-export function replaceItemInResponseCart(
-	responseCart: ResponseCart,
+export function replaceItemInRequestCart(
+	cart: RequestCart,
 	uuidToReplace: string,
 	newProductId: number,
 	newProductSlug: string
-) {
+): RequestCart {
 	return {
-		...responseCart,
-		products: responseCart.products.map( ( item ) => {
+		...cart,
+		products: cart.products.map( ( item ) => {
 			if ( item.uuid === uuidToReplace ) {
 				item.product_id = newProductId;
 				item.product_slug = newProductSlug;

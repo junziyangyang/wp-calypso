@@ -22,7 +22,7 @@ import type {
 import {
 	emptyResponseCart,
 	removeItemFromRequestCart,
-	replaceItemInResponseCart,
+	replaceItemInRequestCart,
 	addCouponToRequestCart,
 	removeCouponFromRequestCart,
 	addLocationToRequestCart,
@@ -91,7 +91,7 @@ export {
 	translateCheckoutPaymentMethodToWpcomPaymentMethod,
 	emptyResponseCart,
 	removeItemFromRequestCart,
-	replaceItemInResponseCart,
+	replaceItemInRequestCart,
 	addCouponToRequestCart,
 	removeCouponFromRequestCart,
 	addLocationToRequestCart,

@@ -12,7 +12,7 @@ import {
 	ResponseCartProduct,
 	emptyResponseCart,
 	removeItemFromRequestCart,
-	replaceItemInResponseCart,
+	replaceItemInRequestCart,
 	processRawResponse,
 	addCouponToRequestCart,
 	removeCouponFromRequestCart,
@@ -139,9 +139,8 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
-				// TODO: use requestCart instead
-				responseCart: replaceItemInResponseCart(
-					state.responseCart,
+				requestCart: replaceItemInRequestCart(
+					state.requestCart || convertResponseCartToRequestCart( state.responseCart ),
 					uuidToReplace,
 					newProductId,
 					newProductSlug
