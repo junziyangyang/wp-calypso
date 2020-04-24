@@ -73,6 +73,7 @@ export default function WPCheckout( {
 	getItemVariants,
 	domainContactValidationCallback,
 	responseCart,
+	addItemToCart,
 	subtotal,
 } ) {
 	const translate = useTranslate();
@@ -132,7 +133,7 @@ export default function WPCheckout( {
 	return (
 		<Checkout>
 			<CheckoutSummaryUI>
-				<WPCheckoutOrderSummary />
+				<WPCheckoutOrderSummary responseCart={ responseCart } addItemToCart={ addItemToCart } />
 			</CheckoutSummaryUI>
 			<CheckoutStepArea>
 				<CheckoutSteps>
