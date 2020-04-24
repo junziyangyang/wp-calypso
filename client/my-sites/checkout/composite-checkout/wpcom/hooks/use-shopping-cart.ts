@@ -15,7 +15,7 @@ import {
 	replaceItemInResponseCart,
 	processRawResponse,
 	addCouponToResponseCart,
-	removeCouponFromResponseCart,
+	removeCouponFromRequestCart,
 	addLocationToResponseCart,
 	doesCartLocationDifferFromResponseCartLocation,
 	WPCOMCart,
@@ -170,8 +170,9 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
-				// TODO: use requestCart instead
-				responseCart: removeCouponFromResponseCart( state.responseCart ),
+				requestCart: removeCouponFromRequestCart(
+					state.requestCart || convertResponseCartToRequestCart( state.responseCart )
+				),
 				couponStatus: 'fresh',
 				cacheStatus: 'invalid',
 			};

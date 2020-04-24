@@ -188,7 +188,7 @@ export function addCouponToResponseCart( cart: ResponseCart, couponToAdd: string
 	};
 }
 
-export function removeCouponFromResponseCart( cart: ResponseCart ): ResponseCart {
+export function removeCouponFromRequestCart( cart: RequestCart ): RequestCart {
 	return {
 		...cart,
 		coupon: '',
