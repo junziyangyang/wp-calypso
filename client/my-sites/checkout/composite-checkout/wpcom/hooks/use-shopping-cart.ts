@@ -26,6 +26,10 @@ import {
 	CheckoutCartItem,
 	CartLocation,
 } from '../types';
+import {
+	convertResponseCartToRequestCart,
+	addItemToRequestCart,
+} from '../types/backend/shopping-cart-endpoint';
 import { translateWpcomCartToCheckoutCart } from '../lib/translate-cart';
 
 const debug = debugFactory( 'composite-checkout-wpcom:shopping-cart-manager' );
@@ -48,6 +52,7 @@ const debug = debugFactory( 'composite-checkout-wpcom:shopping-cart-manager' );
  *         Used to trigger calypso notification side effects on render
  */
 type ShoppingCartHookState = {
+	requestCart: RequestCart | null;
 	responseCart: ResponseCart;
 	couponStatus: CouponStatus;
 	cacheStatus: CacheStatus;
@@ -103,16 +108,20 @@ function shoppingCartHookReducer(
 			debug( 'removing item from cart with uuid', uuidToRemove );
 			return {
 				...state,
+				// TODO: use requestCart instead
 				responseCart: removeItemFromResponseCart( state.responseCart, uuidToRemove ),
 				cacheStatus: 'invalid',
 			};
 		}
 		case 'ADD_CART_ITEM': {
-			const responseCartProductToAdd = action.responseCartProductToAdd;
-			debug( 'adding item to cart', responseCartProductToAdd );
+			const { requestCartProductToAdd } = action;
+			debug( 'adding item to cart', requestCartProductToAdd );
 			return {
 				...state,
-				responseCart: addItemToResponseCart( state.responseCart, responseCartProductToAdd ),
+				requestCart: addItemToRequestCart(
+					state.requestCart || convertResponseCartToRequestCart( state.responseCart ),
+					requestCartProductToAdd
+				),
 				cacheStatus: 'invalid',
 			};
 		}
@@ -130,6 +139,7 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
+				// TODO: use requestCart instead
 				responseCart: replaceItemInResponseCart(
 					state.responseCart,
 					uuidToReplace,
@@ -159,6 +169,7 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
+				// TODO: use requestCart instead
 				responseCart: removeCouponFromResponseCart( state.responseCart ),
 				couponStatus: 'fresh',
 				cacheStatus: 'invalid',
@@ -176,6 +187,7 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
+				// TODO: use requestCart instead
 				responseCart: addCouponToResponseCart( state.responseCart, newCoupon ),
 				couponStatus: 'pending',
 				cacheStatus: 'invalid',
@@ -193,6 +205,7 @@ function shoppingCartHookReducer(
 		case 'REQUEST_UPDATED_RESPONSE_CART':
 			return {
 				...state,
+				requestCart: null,
 				cacheStatus: 'pending',
 			};
 		case 'RECEIVE_UPDATED_RESPONSE_CART': {
@@ -202,6 +215,7 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
+				requestCart: null,
 				responseCart: response,
 				couponStatus: newCouponStatus,
 				cacheStatus: 'valid',
@@ -236,6 +250,7 @@ function shoppingCartHookReducer(
 				debug( 'setting location on cart', action.location );
 				return {
 					...state,
+					// TODO: use requestCart instead
 					responseCart: addLocationToResponseCart( state.responseCart, action.location ),
 					cacheStatus: 'invalid',
 				};
@@ -296,7 +311,7 @@ export interface ShoppingCartManager {
 	subtotal: CheckoutCartItem;
 	couponItem: WPCOMCartCouponItem;
 	credits: CheckoutCartItem;
-	addItem: ( ResponseCartProduct ) => void;
+	addItem: ( RequestCartProduct ) => void;
 	removeItem: ( string ) => void;
 	submitCoupon: ( string ) => void;
 	removeCoupon: () => void;
@@ -419,6 +434,8 @@ export function useShoppingCart(
 	);
 
 	const responseCart: ResponseCart = hookState.responseCart;
+	const requestCart: RequestCart =
+		hookState.requestCart || convertResponseCartToRequestCart( responseCart );
 	const couponStatus: CouponStatus = hookState.couponStatus;
 	const cacheStatus: CacheStatus = hookState.cacheStatus;
 	const variantRequestStatus: VariantRequestStatus = hookState.variantRequestStatus;
@@ -438,7 +455,7 @@ export function useShoppingCart(
 	);
 
 	// Asynchronously re-validate when the cache is dirty.
-	useCartUpdateAndRevalidate( cacheStatus, responseCart, setServerCart, hookDispatch, onEvent );
+	useCartUpdateAndRevalidate( cacheStatus, requestCart, setServerCart, hookDispatch, onEvent );
 
 	// Translate the responseCart into the format needed in checkout.
 	const cart: WPCOMCart = useMemo(
@@ -453,8 +470,8 @@ export function useShoppingCart(
 		hookDispatch
 	);
 
-	const addItem: ( ResponseCartProduct ) => void = useCallback( ( responseCartProductToAdd ) => {
-		hookDispatch( { type: 'ADD_CART_ITEM', responseCartProductToAdd } );
+	const addItem: ( RequestCartProduct ) => void = useCallback( ( requestCartProductToAdd ) => {
+		hookDispatch( { type: 'ADD_CART_ITEM', requestCartProductToAdd } );
 	}, [] );
 
 	const removeItem: ( string ) => void = useCallback( ( uuidToRemove ) => {
@@ -547,6 +564,7 @@ function useInitializeCartFromServer(
 					let updatedResponseCart = processRawResponse( response );
 					if ( productsToAdd?.length ) {
 						updatedResponseCart = productsToAdd.reduce(
+							// TODO: productToAdd is a RequestCartProduct, so we need to modify this to use a RequestCart
 							( updatedCart, productToAdd ) => addItemToResponseCart( updatedCart, productToAdd ),
 							updatedResponseCart
 						);
@@ -593,7 +611,7 @@ function useInitializeCartFromServer(
 
 function useCartUpdateAndRevalidate(
 	cacheStatus: CacheStatus,
-	responseCart: ResponseCart,
+	requestCart: RequestCart,
 	setServerCart: ( RequestCart ) => Promise< ResponseCart >,
 	hookDispatch: ( ShoppingCartHookAction ) => void,
 	onEvent?: ( ReactStandardAction ) => void
@@ -603,11 +621,12 @@ function useCartUpdateAndRevalidate(
 			return;
 		}
 
-		debug( 'sending edited cart to server', responseCart );
+		debug( 'sending edited cart to server', requestCart );
 
 		hookDispatch( { type: 'REQUEST_UPDATED_RESPONSE_CART' } );
 
-		setServerCart( prepareRequestCart( responseCart, { is_update: true } ) )
+		// We need to add is_update so that we don't add a plan automatically when the cart gets updated (DWPO).
+		setServerCart( { ...requestCart, is_update: true } )
 			.then( ( response ) => {
 				debug( 'updated cart is', response );
 				hookDispatch( {
@@ -617,15 +636,15 @@ function useCartUpdateAndRevalidate(
 				hookDispatch( { type: 'CLEAR_VARIANT_SELECT_OVERRIDE' } );
 			} )
 			.catch( ( error ) => {
-				// TODO: figure out what to do here
 				debug( 'error while fetching cart', error );
 				hookDispatch( { type: 'RAISE_ERROR', error: 'SET_SERVER_CART_ERROR' } );
+				// TODO: log the request (at least the products) so we can see why it failed
 				onEvent?.( {
 					type: 'CART_ERROR',
 					payload: { type: 'SET_SERVER_CART_ERROR', message: error },
 				} );
 			} );
-	}, [ setServerCart, cacheStatus, responseCart, onEvent, hookDispatch ] );
+	}, [ setServerCart, cacheStatus, requestCart, onEvent, hookDispatch ] );
 }
 
 function useShowAddCouponSuccessMessage(
