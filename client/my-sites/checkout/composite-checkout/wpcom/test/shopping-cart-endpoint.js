@@ -1,31 +1,223 @@
 /**
  * Internal dependencies
  */
-import { removeItemFromRequestCart, addCouponToRequestCart } from '../types';
+import {
+	removeItemFromRequestCart,
+	addCouponToRequestCart,
+	removeCouponFromRequestCart,
+	replaceItemInRequestCart,
+	addItemToRequestCart,
+	addLocationToRequestCart,
+	doesCartLocationDifferFromResponseCartLocation,
+} from '../types';
 
-describe( 'removeItemFromRequestCart', function () {
-	const baseResponseCart = {
-		total_tax_integer: 0,
-		total_tax_display: '$0',
-		total_cost_integer: 0,
-		total_cost_display: '$0',
-		currency: 'USD',
-		credits_integer: 0,
-		credits_display: '$0',
-		allowed_payment_methods: [],
-		coupon: '',
-		is_coupon_applied: false,
-		coupon_discounts_integer: [],
-		locale: 'en-us',
+const cart = {
+	products: [],
+	total_tax_integer: 0,
+	total_tax_display: '$0',
+	total_cost_integer: 0,
+	total_cost_display: '$0',
+	currency: 'USD',
+	credits_integer: 0,
+	credits_display: '$0',
+	allowed_payment_methods: [],
+	coupon: '',
+	is_coupon_applied: false,
+	coupon_discounts_integer: [],
+	locale: 'en-us',
+	tax: {
+		location: {},
+		display_taxes: false,
+	},
+};
+
+const product1 = {
+	product_slug: 'moo',
+	product_id: 25,
+	uuid: '09',
+};
+const product2 = {
+	product_slug: 'moof',
+	product_id: 88,
+	uuid: '08',
+};
+const product3 = {
+	product_slug: 'hello',
+	product_id: 15,
+	uuid: '10',
+};
+
+describe( 'replaceItemInRequestCart', function () {
+	it( 'replaces an item in the  with a matching uuid', function () {
+		const product1B = { ...product3, uuid: product1.uuid };
+		const result = replaceItemInRequestCart(
+			{ ...cart, products: [ product1, product2 ] },
+			product1.uuid,
+			product1B.product_id,
+			product1B.product_slug
+		);
+		expect( result ).toEqual( { ...cart, products: [ product1B, product2 ] } );
+	} );
+	it( 'does nothing if there is no matching uuid', function () {
+		const result = replaceItemInRequestCart(
+			{ ...cart, products: [ product1, product2 ] },
+			'22',
+			product3.product_id,
+			product3.product_slug
+		);
+		expect( result ).toEqual( { ...cart, products: [ product1, product2 ] } );
+	} );
+} );
+
+describe( 'addItemToRequestCart', function () {
+	it( 'adds the requested item to the product list', function () {
+		const result = addItemToRequestCart( { ...cart, products: [ product1, product2 ] }, product3 );
+		expect( result ).toEqual( { ...cart, products: [ product1, product2, product3 ] } );
+	} );
+} );
+
+describe( 'addLocationToRequestCart', function () {
+	it( 'adds the new location countryCode if set', function () {
+		const result = addLocationToRequestCart( cart, { countryCode: 'US' } );
+		expect( result.tax.location ).toEqual( {
+			country_code: 'US',
+			postal_code: null,
+			subdivision_code: null,
+		} );
+	} );
+	it( 'resets existing codes not replaced', function () {
+		const result = addLocationToRequestCart(
+			{ ...cart, tax: { ...cart.tax, location: { ...cart.tax.location, postal_code: '10001' } } },
+			{ countryCode: 'US' }
+		);
+		expect( result.tax.location ).toEqual( {
+			country_code: 'US',
+			postal_code: null,
+			subdivision_code: null,
+		} );
+	} );
+	it( 'adds the new location postalCode if set', function () {
+		const result = addLocationToRequestCart( cart, { postalCode: '90210' } );
+		expect( result.tax.location ).toEqual( {
+			country_code: null,
+			postal_code: '90210',
+			subdivision_code: null,
+		} );
+	} );
+	it( 'adds the new location subdivisionCode if set', function () {
+		const result = addLocationToRequestCart( cart, { subdivisionCode: 'CA' } );
+		expect( result.tax.location ).toEqual( {
+			country_code: null,
+			postal_code: null,
+			subdivision_code: 'CA',
+		} );
+	} );
+	it( 'adds all new location codes if set', function () {
+		const result = addLocationToRequestCart( cart, {
+			subdivisionCode: 'CA',
+			postalCode: '90210',
+			countryCode: 'US',
+		} );
+		expect( result.tax.location ).toEqual( {
+			country_code: 'US',
+			postal_code: '90210',
+			subdivision_code: 'CA',
+		} );
+	} );
+	it( 'resets all codes when no codes are set', function () {
+		const result = addLocationToRequestCart(
+			{
+				...cart,
+				tax: {
+					...cart.tax,
+					location: { ...cart.tax.location, postal_code: '90210', country_code: 'US' },
+				},
+			},
+			{}
+		);
+		expect( result.tax.location ).toEqual( {
+			country_code: null,
+			postal_code: null,
+			subdivision_code: null,
+		} );
+	} );
+} );
+
+describe( 'doesCartLocationDifferFromResponseCartLocation', function () {
+	const cartWithLocation = {
+		...cart,
 		tax: {
-			location: {},
-			display_taxes: false,
+			...cart.tax,
+			location: {
+				...cart.tax.location,
+				country_code: 'US',
+				subdivision_code: 'CA',
+				postal_code: '90210',
+			},
 		},
 	};
 
-	describe( 'cart with two items and item present', function () {
+	it( 'returns true if countryCode differs', function () {
+		const result = doesCartLocationDifferFromResponseCartLocation( cartWithLocation, {
+			countryCode: 'CA',
+			subdivisionCode: 'CA',
+			postalCode: '90210',
+		} );
+		expect( result ).toBe( true );
+	} );
+	it( 'returns true if postalCode differs', function () {
+		const result = doesCartLocationDifferFromResponseCartLocation( cartWithLocation, {
+			countryCode: 'US',
+			subdivisionCode: 'CA',
+			postalCode: '10001',
+		} );
+		expect( result ).toBe( true );
+	} );
+	it( 'returns true if subdivisionCode differs', function () {
+		const result = doesCartLocationDifferFromResponseCartLocation( cartWithLocation, {
+			countryCode: 'US',
+			subdivisionCode: 'MA',
+			postalCode: '90210',
+		} );
+		expect( result ).toBe( true );
+	} );
+	it( 'returns false if all are the same', function () {
+		const result = doesCartLocationDifferFromResponseCartLocation( cartWithLocation, {
+			countryCode: 'US',
+			subdivisionCode: 'CA',
+			postalCode: '90210',
+		} );
+		expect( result ).toBe( false );
+	} );
+	it( 'returns false if no location codes are provided', function () {
+		const result = doesCartLocationDifferFromResponseCartLocation( cartWithLocation, {
+			countryCode: null,
+			subdivisionCode: null,
+			postalCode: null,
+		} );
+		expect( result ).toBe( false );
+	} );
+} );
+
+describe( 'removeCouponFromRequestCart', function () {
+	it( 'removes an applied coupon', function () {
+		const result = removeCouponFromRequestCart( {
+			...cart,
+			coupon: 'ABVD',
+			is_coupon_applied: true,
+		} );
+		expect( result ).toEqual( cart );
+	} );
+	it( 'has no effect on an unapplied coupon', function () {
+		const result = removeCouponFromRequestCart( cart );
+		expect( result ).toEqual( cart );
+	} );
+} );
+
+describe( 'removeItemFromRequestCart', function () {
+	describe( ' with two items and item present', function () {
 		const responseCart = {
-			...baseResponseCart,
+			...cart,
 			products: [
 				{
 					product_name: 'WordPress.com Personal',
@@ -63,9 +255,9 @@ describe( 'removeItemFromRequestCart', function () {
 		} );
 	} );
 
-	describe( 'cart with two items and item not present', function () {
+	describe( ' with two items and item not present', function () {
 		const responseCart = {
-			...baseResponseCart,
+			...cart,
 			products: [
 				{
 					product_name: 'WordPress.com Personal',
@@ -105,27 +297,7 @@ describe( 'removeItemFromRequestCart', function () {
 } );
 
 describe( 'addCouponToRequestCart', function () {
-	const responseCart = {
-		products: [],
-		total_tax_integer: 0,
-		total_tax_display: '$0',
-		total_cost_integer: 0,
-		total_cost_display: '$0',
-		currency: 'USD',
-		credits_integer: 0,
-		credits_display: '$0',
-		allowed_payment_methods: [],
-		coupon: '',
-		is_coupon_applied: false,
-		coupon_discounts_integer: [],
-		locale: 'en-us',
-		tax: {
-			location: {},
-			display_taxes: false,
-		},
-	};
-
-	const result = addCouponToRequestCart( responseCart, 'fakecoupon' );
+	const result = addCouponToRequestCart( cart, 'fakecoupon' );
 
 	it( 'has the expected coupon', function () {
 		expect( result.coupon ).toEqual( 'fakecoupon' );
