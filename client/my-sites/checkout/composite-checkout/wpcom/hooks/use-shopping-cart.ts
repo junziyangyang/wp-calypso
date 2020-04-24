@@ -9,10 +9,12 @@ import debugFactory from 'debug';
  */
 import {
 	ResponseCart,
+	RequestCart,
+	RequestCartProduct,
 	emptyResponseCart,
 	removeItemFromRequestCart,
 	replaceItemInRequestCart,
-	processRawResponse,
+	convertRawResponseCartToResponseCart,
 	addCouponToRequestCart,
 	removeCouponFromRequestCart,
 	addLocationToRequestCart,
@@ -61,6 +63,7 @@ type ShoppingCartHookState = {
 const getInitialShoppingCartHookState: () => ShoppingCartHookState = () => {
 	return {
 		responseCart: emptyResponseCart,
+		requestCart: null,
 		cacheStatus: 'fresh',
 		couponStatus: 'fresh',
 		variantRequestStatus: 'fresh',
@@ -312,13 +315,13 @@ export interface ShoppingCartManager {
 	subtotal: CheckoutCartItem;
 	couponItem: WPCOMCartCouponItem;
 	credits: CheckoutCartItem;
-	addItem: ( RequestCartProduct ) => void;
-	removeItem: ( string ) => void;
-	submitCoupon: ( string ) => void;
+	addItem: ( arg0: RequestCartProduct ) => void;
+	removeItem: ( arg0: string ) => void;
+	submitCoupon: ( arg0: string ) => void;
 	removeCoupon: () => void;
 	couponStatus: CouponStatus;
 	couponCode: string | null;
-	updateLocation: ( CartLocation ) => void;
+	updateLocation: ( arg0: CartLocation ) => void;
 	variantRequestStatus: VariantRequestStatus;
 	variantSelectOverride: { uuid: string; overrideSelectedProductSlug: string }[];
 	responseCart: ResponseCart;
@@ -416,18 +419,18 @@ export function useShoppingCart(
 	canInitializeCart: boolean,
 	productsToAdd: RequestCartProduct[] | null,
 	couponToAdd: string | null,
-	setCart: ( string, RequestCart ) => Promise< ResponseCart >,
-	getCart: ( string ) => Promise< ResponseCart >,
-	translate: ( string ) => string,
-	showAddCouponSuccessMessage: ( string ) => void,
-	onEvent?: ( ReactStandardAction ) => void
+	setCart: ( arg0: string, arg1: RequestCart ) => Promise< ResponseCart >,
+	getCart: ( arg0: string ) => Promise< ResponseCart >,
+	translate: ( arg0: string ) => string,
+	showAddCouponSuccessMessage: ( arg0: string ) => void,
+	onEvent?: ( arg0: ReactStandardAction ) => void
 ): ShoppingCartManager {
-	cartKey = cartKey || 'no-site';
-	const setServerCart = useCallback( ( cartParam ) => setCart( cartKey, cartParam ), [
-		cartKey,
+	const cartKeyString: string = cartKey || 'no-site';
+	const setServerCart = useCallback( ( cartParam ) => setCart( cartKeyString, cartParam ), [
+		cartKeyString,
 		setCart,
 	] );
-	const getServerCart = useCallback( () => getCart( cartKey ), [ cartKey, getCart ] );
+	const getServerCart = useCallback( () => getCart( cartKeyString ), [ cartKeyString, getCart ] );
 
 	const [ hookState, hookDispatch ] = useReducer(
 		shoppingCartHookReducer,
@@ -471,11 +474,14 @@ export function useShoppingCart(
 		hookDispatch
 	);
 
-	const addItem: ( RequestCartProduct ) => void = useCallback( ( requestCartProductToAdd ) => {
-		hookDispatch( { type: 'ADD_CART_ITEM', requestCartProductToAdd } );
-	}, [] );
+	const addItem: ( arg0: RequestCartProduct ) => void = useCallback(
+		( requestCartProductToAdd ) => {
+			hookDispatch( { type: 'ADD_CART_ITEM', requestCartProductToAdd } );
+		},
+		[]
+	);
 
-	const removeItem: ( string ) => void = useCallback( ( uuidToRemove ) => {
+	const removeItem: ( arg0: string ) => void = useCallback( ( uuidToRemove ) => {
 		hookDispatch( { type: 'REMOVE_CART_ITEM', uuidToRemove } );
 	}, [] );
 
@@ -487,11 +493,11 @@ export function useShoppingCart(
 		hookDispatch( { type: 'REPLACE_CART_ITEM', uuidToReplace, newProductSlug, newProductId } );
 	}, [] );
 
-	const updateLocation: ( CartLocation ) => void = useCallback( ( location ) => {
+	const updateLocation: ( arg0: CartLocation ) => void = useCallback( ( location ) => {
 		hookDispatch( { type: 'SET_LOCATION', location } );
 	}, [] );
 
-	const submitCoupon: ( string ) => void = useCallback( ( newCoupon ) => {
+	const submitCoupon: ( arg0: string ) => void = useCallback( ( newCoupon ) => {
 		hookDispatch( { type: 'ADD_COUPON', couponToAdd: newCoupon } );
 	}, [] );
 
@@ -529,9 +535,9 @@ function useInitializeCartFromServer(
 	productsToAdd: RequestCartProduct[] | null,
 	couponToAdd: string | null,
 	getServerCart: () => Promise< ResponseCart >,
-	setServerCart: ( RequestCart ) => Promise< ResponseCart >,
-	hookDispatch: ( ShoppingCartHookAction ) => void,
-	onEvent?: ( ReactStandardAction ) => void
+	setServerCart: ( arg0: RequestCart ) => Promise< ResponseCart >,
+	hookDispatch: ( arg0: ShoppingCartHookAction ) => void,
+	onEvent?: ( arg0: ReactStandardAction ) => void
 ): void {
 	const isInitialized = useRef( false );
 	useEffect( () => {
@@ -563,7 +569,7 @@ function useInitializeCartFromServer(
 						couponToAdd
 					);
 					let updatedRequestCart = convertResponseCartToRequestCart(
-						processRawResponse( response )
+						convertRawResponseCartToResponseCart( response )
 					);
 					if ( productsToAdd?.length ) {
 						updatedRequestCart = productsToAdd.reduce(
@@ -580,7 +586,7 @@ function useInitializeCartFromServer(
 			} )
 			.then( ( response ) => {
 				debug( 'initialized cart is', response );
-				const initialResponseCart = processRawResponse( response );
+				const initialResponseCart = convertRawResponseCartToResponseCart( response );
 				hookDispatch( {
 					type: 'RECEIVE_INITIAL_RESPONSE_CART',
 					initialResponseCart,
@@ -614,9 +620,9 @@ function useInitializeCartFromServer(
 function useCartUpdateAndRevalidate(
 	cacheStatus: CacheStatus,
 	requestCart: RequestCart,
-	setServerCart: ( RequestCart ) => Promise< ResponseCart >,
-	hookDispatch: ( ShoppingCartHookAction ) => void,
-	onEvent?: ( ReactStandardAction ) => void
+	setServerCart: ( arg0: RequestCart ) => Promise< ResponseCart >,
+	hookDispatch: ( arg0: ShoppingCartHookAction ) => void,
+	onEvent?: ( arg0: ReactStandardAction ) => void
 ): void {
 	useEffect( () => {
 		if ( cacheStatus !== 'invalid' ) {
@@ -633,7 +639,7 @@ function useCartUpdateAndRevalidate(
 				debug( 'updated cart is', response );
 				hookDispatch( {
 					type: 'RECEIVE_UPDATED_RESPONSE_CART',
-					updatedResponseCart: processRawResponse( response ),
+					updatedResponseCart: convertRawResponseCartToResponseCart( response ),
 				} );
 				hookDispatch( { type: 'CLEAR_VARIANT_SELECT_OVERRIDE' } );
 			} )
@@ -652,8 +658,8 @@ function useCartUpdateAndRevalidate(
 function useShowAddCouponSuccessMessage(
 	didAddCoupon: boolean,
 	responseCart: ResponseCart,
-	showAddCouponSuccessMessage: ( string ) => void,
-	hookDispatch: ( ShoppingCartHookAction ) => void
+	showAddCouponSuccessMessage: ( arg0: string ) => void,
+	hookDispatch: ( arg0: ShoppingCartHookAction ) => void
 ): void {
 	useEffect( () => {
 		if ( didAddCoupon ) {

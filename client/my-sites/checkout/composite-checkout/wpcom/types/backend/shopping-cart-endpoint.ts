@@ -33,6 +33,7 @@ export interface RequestCart {
 	is_coupon_applied: boolean;
 	temporary: false;
 	extra: string;
+	is_update?: boolean;
 }
 
 /**
@@ -43,6 +44,7 @@ export interface RequestCartProduct {
 	product_id: number;
 	meta: string;
 	extra: object;
+	uuid?: string;
 }
 
 /**
@@ -129,17 +131,21 @@ interface RequestCartOptions {
 	is_update?: boolean;
 }
 
-export const prepareRequestCartProduct: ( ResponseCartProduct ) => RequestCartProduct = ( {
+export const convertResponseCartProductToRequestCartProduct: (
+	arg0: ResponseCartProduct
+) => RequestCartProduct = ( {
 	product_slug,
 	meta,
 	product_id,
 	extra,
+	uuid,
 }: ResponseCartProduct ) => {
 	return {
 		product_slug,
 		meta,
 		product_id,
 		extra,
+		uuid,
 	} as RequestCartProduct;
 };
 
@@ -152,7 +158,7 @@ export function convertResponseCartToRequestCart( {
 	tax,
 }: ResponseCart ): RequestCart {
 	return {
-		products: products.map( prepareRequestCartProduct ),
+		products: products.map( convertResponseCartProductToRequestCartProduct ),
 		currency,
 		locale,
 		coupon,
@@ -163,7 +169,7 @@ export function convertResponseCartToRequestCart( {
 	} as RequestCart;
 }
 
-export function removeItemFromRequestCart( cart: RequestCart, uuidToRemove: string ): ResponseCart {
+export function removeItemFromRequestCart( cart: RequestCart, uuidToRemove: string ): RequestCart {
 	return {
 		...cart,
 		products: cart.products.filter( ( product ) => {
@@ -194,9 +200,9 @@ export function addLocationToRequestCart( cart: RequestCart, location: CartLocat
 		tax: {
 			...cart.tax,
 			location: {
-				country_code: location.countryCode || undefined,
-				postal_code: location.postalCode || undefined,
-				subdivision_code: location.subdivisionCode || undefined,
+				country_code: location.countryCode || null,
+				postal_code: location.postalCode || null,
+				subdivision_code: location.subdivisionCode || null,
 			},
 		},
 	};
@@ -225,7 +231,9 @@ export interface CartLocation {
 	subdivisionCode: string | null;
 }
 
-export function processRawResponse( rawResponseCart ): ResponseCart {
+export function convertRawResponseCartToResponseCart(
+	rawResponseCart: ResponseCart
+): ResponseCart {
 	return {
 		...rawResponseCart,
 		// If tax.location is an empty PHP associative array, it will be JSON serialized to [] but we need {}
