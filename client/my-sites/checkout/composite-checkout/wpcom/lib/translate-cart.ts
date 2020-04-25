@@ -20,7 +20,7 @@ import {
  * @param serverCart Cart object returned by the WPCOM cart endpoint
  * @returns Cart object suitable for passing to the checkout component
  */
-export function translateWpcomCartToCheckoutCart(
+export function translateResponseCartToWPCOMCart(
 	translate: ( arg0: string, arg1?: any ) => string, //eslint-disable-line @typescript-eslint/no-explicit-any
 	serverCart: ResponseCart
 ): WPCOMCart {

@@ -27,7 +27,7 @@ import {
 	convertResponseCartToRequestCart,
 	addItemToRequestCart,
 } from '../types';
-import { translateWpcomCartToCheckoutCart } from '../lib/translate-cart';
+import { translateResponseCartToWPCOMCart } from '../lib/translate-cart';
 
 const debug = debugFactory( 'composite-checkout-wpcom:shopping-cart-manager' );
 
@@ -463,7 +463,7 @@ export function useShoppingCart(
 
 	// Translate the responseCart into the format needed in checkout.
 	const cart: WPCOMCart = useMemo(
-		() => translateWpcomCartToCheckoutCart( translate, responseCart ),
+		() => translateResponseCartToWPCOMCart( translate, responseCart ),
 		[ translate, responseCart ]
 	);
 
