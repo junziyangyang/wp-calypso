@@ -15,6 +15,8 @@
  * @see WPCOM_JSON_API_Me_Shopping_Cart_Endpoint
  */
 
+let lastUUID = 100;
+
 /**
  * Request schema for the shopping cart endpoint
  */
@@ -44,14 +46,13 @@ export interface RequestCartProduct {
 	product_id: number;
 	meta: string;
 	extra: object;
-	uuid?: string;
 }
 
 /**
  * Response schema for the shopping cart endpoint
  */
 export interface ResponseCart {
-	products: ResponseCartProduct[];
+	products: ( TempResponseCartProduct | ResponseCartProduct )[];
 	total_tax_integer: number;
 	total_tax_display: string;
 	total_cost_integer: number;
@@ -127,15 +128,34 @@ export interface ResponseCartProduct {
 	included_domain_purchase_amount: number;
 }
 
-export const convertResponseCartProductToRequestCartProduct: (
-	arg0: ResponseCartProduct
-) => RequestCartProduct = ( {
-	product_slug,
-	meta,
-	product_id,
-	extra,
-	uuid,
-}: ResponseCartProduct ) => {
+/**
+ * A way to add an item to the response cart with incomplete data while the data is loading.
+ */
+export interface TempResponseCartProduct {
+	product_name: string | null;
+	product_slug: string;
+	product_id: number;
+	currency: string | null;
+	product_cost_integer: null;
+	product_cost_display: null;
+	item_subtotal_integer: null;
+	item_subtotal_display: null;
+	is_domain_registration: boolean | null;
+	is_bundled: boolean | null;
+	meta: string;
+	volume: number;
+	extra: object;
+	uuid: string;
+	cost: null;
+	price: null;
+	product_type: null;
+	included_domain_purchase_amount: null;
+}
+
+export function convertResponseCartProductToRequestCartProduct(
+	product: ResponseCartProduct | TempResponseCartProduct
+): RequestCartProduct {
+	const { product_slug, meta, product_id, extra, uuid } = product;
 	return {
 		product_slug,
 		meta,
@@ -143,7 +163,7 @@ export const convertResponseCartProductToRequestCartProduct: (
 		extra,
 		uuid,
 	} as RequestCartProduct;
-};
+}
 
 export function convertResponseCartToRequestCart( {
 	products,
@@ -165,7 +185,10 @@ export function convertResponseCartToRequestCart( {
 	} as RequestCart;
 }
 
-export function removeItemFromRequestCart( cart: RequestCart, uuidToRemove: string ): RequestCart {
+export function removeItemFromResponseCart(
+	cart: ResponseCart,
+	uuidToRemove: string
+): ResponseCart {
 	return {
 		...cart,
 		products: cart.products.filter( ( product ) => {
@@ -174,7 +197,7 @@ export function removeItemFromRequestCart( cart: RequestCart, uuidToRemove: stri
 	};
 }
 
-export function addCouponToRequestCart( cart: RequestCart, couponToAdd: string ): RequestCart {
+export function addCouponToResponseCart( cart: ResponseCart, couponToAdd: string ): ResponseCart {
 	return {
 		...cart,
 		coupon: couponToAdd,
@@ -182,7 +205,7 @@ export function addCouponToRequestCart( cart: RequestCart, couponToAdd: string )
 	};
 }
 
-export function removeCouponFromRequestCart( cart: RequestCart ): RequestCart {
+export function removeCouponFromResponseCart( cart: ResponseCart ): ResponseCart {
 	return {
 		...cart,
 		coupon: '',
@@ -190,15 +213,18 @@ export function removeCouponFromRequestCart( cart: RequestCart ): RequestCart {
 	};
 }
 
-export function addLocationToRequestCart( cart: RequestCart, location: CartLocation ): RequestCart {
+export function addLocationToResponseCart(
+	cart: ResponseCart,
+	location: CartLocation
+): ResponseCart {
 	return {
 		...cart,
 		tax: {
 			...cart.tax,
 			location: {
-				country_code: location.countryCode || null,
-				postal_code: location.postalCode || null,
-				subdivision_code: location.subdivisionCode || null,
+				country_code: location.countryCode || undefined,
+				postal_code: location.postalCode || undefined,
+				subdivision_code: location.subdivisionCode || undefined,
 			},
 		},
 	};
@@ -247,22 +273,23 @@ export function convertRawResponseCartToResponseCart(
 	};
 }
 
-export function addItemToRequestCart(
-	requestCart: RequestCart,
+export function addItemToResponseCart(
+	responseCart: ResponseCart,
 	product: RequestCartProduct
-): RequestCart {
+): ResponseCart {
+	const convertedProduct = convertRequestCartProductToResponseCartProduct( product );
 	return {
-		...requestCart,
-		products: [ ...requestCart.products, product ],
+		...responseCart,
+		products: [ ...responseCart.products, convertedProduct ],
 	};
 }
 
-export function replaceItemInRequestCart(
-	cart: RequestCart,
+export function replaceItemInResponseCart(
+	cart: ResponseCart,
 	uuidToReplace: string,
 	newProductId: number,
 	newProductSlug: string
-): RequestCart {
+): ResponseCart {
 	return {
 		...cart,
 		products: cart.products.map( ( item ) => {
@@ -271,5 +298,31 @@ export function replaceItemInRequestCart(
 			}
 			return item;
 		} ),
+	};
+}
+
+function convertRequestCartProductToResponseCartProduct(
+	product: RequestCartProduct
+): TempResponseCartProduct {
+	const { product_slug, product_id, meta, extra } = product;
+	return {
+		product_name: '…',
+		product_slug,
+		product_id,
+		currency: null,
+		product_cost_integer: null,
+		product_cost_display: null,
+		item_subtotal_integer: null,
+		item_subtotal_display: null,
+		is_domain_registration: null,
+		is_bundled: null,
+		meta,
+		volume: 1,
+		extra,
+		uuid: 'calypso-shopping-cart-endpoint-uuid-' + lastUUID++,
+		cost: null,
+		price: null,
+		product_type: null,
+		included_domain_purchase_amount: null,
 	};
 }

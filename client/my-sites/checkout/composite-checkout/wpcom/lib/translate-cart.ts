@@ -4,6 +4,7 @@
 import {
 	ResponseCart,
 	ResponseCartProduct,
+	TempResponseCartProduct,
 	WPCOMCart,
 	WPCOMCartItem,
 	WPCOMCartCouponItem,
@@ -141,8 +142,8 @@ function translateWpcomCartItemToCheckoutCartItem(
 	is_coupon_applied: boolean,
 	coupon_discounts_integer: number[],
 	localizeCurrency: ( arg0: string, arg1: number ) => string
-): ( arg0: ResponseCartProduct ) => WPCOMCartItem {
-	return ( serverCartItem: ResponseCartProduct ) => {
+): ( arg0: ResponseCartProduct | TempResponseCartProduct ) => WPCOMCartItem {
+	return ( serverCartItem: ResponseCartProduct | TempResponseCartProduct ) => {
 		const {
 			product_id,
 			product_name,
@@ -164,19 +165,19 @@ function translateWpcomCartItemToCheckoutCartItem(
 
 		// TODO: watch out for this when localizing
 		const value = is_coupon_applied
-			? item_subtotal_integer + ( coupon_discounts_integer[ product_id ] ?? 0 )
+			? ( item_subtotal_integer || 0 ) + ( coupon_discounts_integer[ product_id ] ?? 0 )
 			: item_subtotal_integer;
-		const displayValue = localizeCurrency( currency, value );
+		const displayValue = localizeCurrency( currency || '', value || 0 );
 
 		return {
 			id: uuid,
-			label: product_name,
+			label: product_name || '…',
 			sublabel: sublabel,
 			type: product_slug,
 			amount: {
-				currency,
-				value,
-				displayValue,
+				currency: currency || '',
+				value: value || 0,
+				displayValue: displayValue || '',
 			},
 			wpcom_meta: {
 				uuid: uuid,
@@ -185,10 +186,10 @@ function translateWpcomCartItemToCheckoutCartItem(
 				product_slug,
 				extra,
 				volume,
-				is_domain_registration,
-				is_bundled,
-				product_cost_integer,
-				product_cost_display,
+				is_domain_registration: is_domain_registration || false,
+				is_bundled: is_bundled || false,
+				product_cost_integer: product_cost_integer || 0,
+				product_cost_display: product_cost_display || '',
 			},
 		};
 	};

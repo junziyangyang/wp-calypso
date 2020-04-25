@@ -12,12 +12,12 @@ import {
 	RequestCart,
 	RequestCartProduct,
 	emptyResponseCart,
-	removeItemFromRequestCart,
-	replaceItemInRequestCart,
+	removeItemFromResponseCart,
+	replaceItemInResponseCart,
 	convertRawResponseCartToResponseCart,
-	addCouponToRequestCart,
-	removeCouponFromRequestCart,
-	addLocationToRequestCart,
+	addCouponToResponseCart,
+	removeCouponFromResponseCart,
+	addLocationToResponseCart,
 	doesCartLocationDifferFromResponseCartLocation,
 	WPCOMCart,
 	WPCOMCartItem,
@@ -25,7 +25,7 @@ import {
 	CheckoutCartItem,
 	CartLocation,
 	convertResponseCartToRequestCart,
-	addItemToRequestCart,
+	addItemToResponseCart,
 } from '../types';
 import { translateResponseCartToWPCOMCart } from '../lib/translate-cart';
 
@@ -106,10 +106,7 @@ function shoppingCartHookReducer(
 			debug( 'removing item from cart with uuid', uuidToRemove );
 			return {
 				...state,
-				requestCart: removeItemFromRequestCart(
-					state.requestCart || convertResponseCartToRequestCart( state.responseCart ),
-					uuidToRemove
-				),
+				responseCart: removeItemFromResponseCart( state.responseCart, uuidToRemove ),
 				cacheStatus: 'invalid',
 			};
 		}
@@ -118,10 +115,7 @@ function shoppingCartHookReducer(
 			debug( 'adding item to cart', requestCartProductToAdd );
 			return {
 				...state,
-				requestCart: addItemToRequestCart(
-					state.requestCart || convertResponseCartToRequestCart( state.responseCart ),
-					requestCartProductToAdd
-				),
+				responseCart: addItemToResponseCart( state.responseCart, requestCartProductToAdd ),
 				cacheStatus: 'invalid',
 			};
 		}
@@ -139,8 +133,8 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
-				requestCart: replaceItemInRequestCart(
-					state.requestCart || convertResponseCartToRequestCart( state.responseCart ),
+				responseCart: replaceItemInResponseCart(
+					state.responseCart,
 					uuidToReplace,
 					newProductId,
 					newProductSlug
@@ -168,9 +162,7 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
-				requestCart: removeCouponFromRequestCart(
-					state.requestCart || convertResponseCartToRequestCart( state.responseCart )
-				),
+				responseCart: removeCouponFromResponseCart( state.responseCart ),
 				couponStatus: 'fresh',
 				cacheStatus: 'invalid',
 			};
@@ -187,10 +179,7 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
-				requestCart: addCouponToRequestCart(
-					state.requestCart || convertResponseCartToRequestCart( state.responseCart ),
-					newCoupon
-				),
+				responseCart: addCouponToResponseCart( state.responseCart, newCoupon ),
 				couponStatus: 'pending',
 				cacheStatus: 'invalid',
 			};
@@ -207,7 +196,6 @@ function shoppingCartHookReducer(
 		case 'REQUEST_UPDATED_RESPONSE_CART':
 			return {
 				...state,
-				requestCart: null,
 				cacheStatus: 'pending',
 			};
 		case 'RECEIVE_UPDATED_RESPONSE_CART': {
@@ -217,7 +205,6 @@ function shoppingCartHookReducer(
 
 			return {
 				...state,
-				requestCart: null,
 				responseCart: response,
 				couponStatus: newCouponStatus,
 				cacheStatus: 'valid',
@@ -252,10 +239,7 @@ function shoppingCartHookReducer(
 				debug( 'setting location on cart', action.location );
 				return {
 					...state,
-					requestCart: addLocationToRequestCart(
-						state.requestCart || convertResponseCartToRequestCart( state.responseCart ),
-						action.location
-					),
+					responseCart: addLocationToResponseCart( state.responseCart, action.location ),
 					cacheStatus: 'invalid',
 				};
 			}
@@ -438,8 +422,6 @@ export function useShoppingCart(
 	);
 
 	const responseCart: ResponseCart = hookState.responseCart;
-	const requestCart: RequestCart =
-		hookState.requestCart || convertResponseCartToRequestCart( responseCart );
 	const couponStatus: CouponStatus = hookState.couponStatus;
 	const cacheStatus: CacheStatus = hookState.cacheStatus;
 	const variantRequestStatus: VariantRequestStatus = hookState.variantRequestStatus;
@@ -459,7 +441,7 @@ export function useShoppingCart(
 	);
 
 	// Asynchronously re-validate when the cache is dirty.
-	useCartUpdateAndRevalidate( cacheStatus, requestCart, setServerCart, hookDispatch, onEvent );
+	useCartUpdateAndRevalidate( cacheStatus, responseCart, setServerCart, hookDispatch, onEvent );
 
 	// Translate the responseCart into the format needed in checkout.
 	const cart: WPCOMCart = useMemo(
@@ -568,19 +550,17 @@ function useInitializeCartFromServer(
 						' and coupons',
 						couponToAdd
 					);
-					let updatedRequestCart = convertResponseCartToRequestCart(
-						convertRawResponseCartToResponseCart( response )
-					);
+					let responseCart = convertRawResponseCartToResponseCart( response );
 					if ( productsToAdd?.length ) {
-						updatedRequestCart = productsToAdd.reduce(
-							( updatedCart, productToAdd ) => addItemToRequestCart( updatedCart, productToAdd ),
-							updatedRequestCart
+						responseCart = productsToAdd.reduce(
+							( updatedCart, productToAdd ) => addItemToResponseCart( updatedCart, productToAdd ),
+							responseCart
 						);
 					}
 					if ( couponToAdd ) {
-						updatedRequestCart = addCouponToRequestCart( updatedRequestCart, couponToAdd );
+						responseCart = addCouponToResponseCart( responseCart, couponToAdd );
 					}
-					return setServerCart( updatedRequestCart );
+					return setServerCart( convertResponseCartToRequestCart( responseCart ) );
 				}
 				return response;
 			} )
@@ -619,7 +599,7 @@ function useInitializeCartFromServer(
 
 function useCartUpdateAndRevalidate(
 	cacheStatus: CacheStatus,
-	requestCart: RequestCart,
+	responseCart: ResponseCart,
 	setServerCart: ( arg0: RequestCart ) => Promise< ResponseCart >,
 	hookDispatch: ( arg0: ShoppingCartHookAction ) => void,
 	onEvent?: ( arg0: ReactStandardAction ) => void
@@ -629,6 +609,7 @@ function useCartUpdateAndRevalidate(
 			return;
 		}
 
+		const requestCart = convertResponseCartToRequestCart( responseCart );
 		debug( 'sending edited cart to server', requestCart );
 
 		hookDispatch( { type: 'REQUEST_UPDATED_RESPONSE_CART' } );
@@ -652,7 +633,7 @@ function useCartUpdateAndRevalidate(
 					payload: { type: 'SET_SERVER_CART_ERROR', message: error },
 				} );
 			} );
-	}, [ setServerCart, cacheStatus, requestCart, onEvent, hookDispatch ] );
+	}, [ setServerCart, cacheStatus, responseCart, onEvent, hookDispatch ] );
 }
 
 function useShowAddCouponSuccessMessage(

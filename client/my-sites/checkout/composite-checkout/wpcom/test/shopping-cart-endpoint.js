@@ -2,12 +2,12 @@
  * Internal dependencies
  */
 import {
-	removeItemFromRequestCart,
-	addCouponToRequestCart,
-	removeCouponFromRequestCart,
-	replaceItemInRequestCart,
-	addItemToRequestCart,
-	addLocationToRequestCart,
+	removeItemFromResponseCart,
+	addCouponToResponseCart,
+	removeCouponFromResponseCart,
+	replaceItemInResponseCart,
+	addItemToResponseCart,
+	addLocationToResponseCart,
 	doesCartLocationDifferFromResponseCartLocation,
 } from '../types';
 
@@ -47,10 +47,10 @@ const product3 = {
 	uuid: '10',
 };
 
-describe( 'replaceItemInRequestCart', function () {
+describe( 'replaceItemInResponseCart', function () {
 	it( 'replaces an item in the  with a matching uuid', function () {
 		const product1B = { ...product3, uuid: product1.uuid };
-		const result = replaceItemInRequestCart(
+		const result = replaceItemInResponseCart(
 			{ ...cart, products: [ product1, product2 ] },
 			product1.uuid,
 			product1B.product_id,
@@ -59,7 +59,7 @@ describe( 'replaceItemInRequestCart', function () {
 		expect( result ).toEqual( { ...cart, products: [ product1B, product2 ] } );
 	} );
 	it( 'does nothing if there is no matching uuid', function () {
-		const result = replaceItemInRequestCart(
+		const result = replaceItemInResponseCart(
 			{ ...cart, products: [ product1, product2 ] },
 			'22',
 			product3.product_id,
@@ -69,51 +69,72 @@ describe( 'replaceItemInRequestCart', function () {
 	} );
 } );
 
-describe( 'addItemToRequestCart', function () {
-	it( 'adds the requested item to the product list', function () {
-		const result = addItemToRequestCart( { ...cart, products: [ product1, product2 ] }, product3 );
-		expect( result ).toEqual( { ...cart, products: [ product1, product2, product3 ] } );
+describe( 'addItemToResponseCart', function () {
+	it( 'adds the requested item to the product list with placeholder properties', function () {
+		const result = addItemToResponseCart( { ...cart, products: [ product1, product2 ] }, product3 );
+		const product3B = {
+			...product3,
+			cost: null,
+			currency: null,
+			extra: undefined,
+			included_domain_purchase_amount: null,
+			is_bundled: null,
+			is_domain_registration: null,
+			item_subtotal_display: null,
+			item_subtotal_integer: null,
+			meta: undefined,
+			price: null,
+			product_cost_display: null,
+			product_cost_integer: null,
+			product_name: '…',
+			product_type: null,
+			uuid: 'calypso-shopping-cart-endpoint-uuid-100',
+			volume: 1,
+		};
+		expect( result.products[ 0 ] ).toEqual( product1 );
+		expect( result.products[ 1 ] ).toEqual( product2 );
+		expect( result.products[ 2 ] ).toEqual( product3B );
 	} );
 } );
 
-describe( 'addLocationToRequestCart', function () {
+describe( 'addLocationToResponseCart', function () {
 	it( 'adds the new location countryCode if set', function () {
-		const result = addLocationToRequestCart( cart, { countryCode: 'US' } );
+		const result = addLocationToResponseCart( cart, { countryCode: 'US' } );
 		expect( result.tax.location ).toEqual( {
 			country_code: 'US',
-			postal_code: null,
-			subdivision_code: null,
+			postal_code: undefined,
+			subdivision_code: undefined,
 		} );
 	} );
 	it( 'resets existing codes not replaced', function () {
-		const result = addLocationToRequestCart(
+		const result = addLocationToResponseCart(
 			{ ...cart, tax: { ...cart.tax, location: { ...cart.tax.location, postal_code: '10001' } } },
 			{ countryCode: 'US' }
 		);
 		expect( result.tax.location ).toEqual( {
 			country_code: 'US',
-			postal_code: null,
-			subdivision_code: null,
+			postal_code: undefined,
+			subdivision_code: undefined,
 		} );
 	} );
 	it( 'adds the new location postalCode if set', function () {
-		const result = addLocationToRequestCart( cart, { postalCode: '90210' } );
+		const result = addLocationToResponseCart( cart, { postalCode: '90210' } );
 		expect( result.tax.location ).toEqual( {
-			country_code: null,
+			country_code: undefined,
 			postal_code: '90210',
-			subdivision_code: null,
+			subdivision_code: undefined,
 		} );
 	} );
 	it( 'adds the new location subdivisionCode if set', function () {
-		const result = addLocationToRequestCart( cart, { subdivisionCode: 'CA' } );
+		const result = addLocationToResponseCart( cart, { subdivisionCode: 'CA' } );
 		expect( result.tax.location ).toEqual( {
-			country_code: null,
-			postal_code: null,
+			country_code: undefined,
+			postal_code: undefined,
 			subdivision_code: 'CA',
 		} );
 	} );
 	it( 'adds all new location codes if set', function () {
-		const result = addLocationToRequestCart( cart, {
+		const result = addLocationToResponseCart( cart, {
 			subdivisionCode: 'CA',
 			postalCode: '90210',
 			countryCode: 'US',
@@ -125,7 +146,7 @@ describe( 'addLocationToRequestCart', function () {
 		} );
 	} );
 	it( 'resets all codes when no codes are set', function () {
-		const result = addLocationToRequestCart(
+		const result = addLocationToResponseCart(
 			{
 				...cart,
 				tax: {
@@ -136,9 +157,9 @@ describe( 'addLocationToRequestCart', function () {
 			{}
 		);
 		expect( result.tax.location ).toEqual( {
-			country_code: null,
-			postal_code: null,
-			subdivision_code: null,
+			country_code: undefined,
+			postal_code: undefined,
+			subdivision_code: undefined,
 		} );
 	} );
 } );
@@ -191,17 +212,17 @@ describe( 'doesCartLocationDifferFromResponseCartLocation', function () {
 	} );
 	it( 'returns false if no location codes are provided', function () {
 		const result = doesCartLocationDifferFromResponseCartLocation( cartWithLocation, {
-			countryCode: null,
-			subdivisionCode: null,
-			postalCode: null,
+			countryCode: undefined,
+			subdivisionCode: undefined,
+			postalCode: undefined,
 		} );
 		expect( result ).toBe( false );
 	} );
 } );
 
-describe( 'removeCouponFromRequestCart', function () {
+describe( 'removeCouponFromResponseCart', function () {
 	it( 'removes an applied coupon', function () {
-		const result = removeCouponFromRequestCart( {
+		const result = removeCouponFromResponseCart( {
 			...cart,
 			coupon: 'ABVD',
 			is_coupon_applied: true,
@@ -209,12 +230,12 @@ describe( 'removeCouponFromRequestCart', function () {
 		expect( result ).toEqual( cart );
 	} );
 	it( 'has no effect on an unapplied coupon', function () {
-		const result = removeCouponFromRequestCart( cart );
+		const result = removeCouponFromResponseCart( cart );
 		expect( result ).toEqual( cart );
 	} );
 } );
 
-describe( 'removeItemFromRequestCart', function () {
+describe( 'removeItemFromResponseCart', function () {
 	describe( ' with two items and item present', function () {
 		const responseCart = {
 			...cart,
@@ -248,7 +269,7 @@ describe( 'removeItemFromRequestCart', function () {
 			],
 		};
 
-		const result = removeItemFromRequestCart( responseCart, '0' );
+		const result = removeItemFromResponseCart( responseCart, '0' );
 
 		it( 'has expected array of uuids', function () {
 			expect( result.products.map( ( product ) => product.uuid ) ).toEqual( [ '1' ] );
@@ -288,7 +309,7 @@ describe( 'removeItemFromRequestCart', function () {
 			],
 		};
 
-		const result = removeItemFromRequestCart( responseCart, '2' );
+		const result = removeItemFromResponseCart( responseCart, '2' );
 
 		it( 'has expected array of uuids', function () {
 			expect( result.products.map( ( product ) => product.uuid ) ).toEqual( [ '0', '1' ] );
@@ -296,8 +317,8 @@ describe( 'removeItemFromRequestCart', function () {
 	} );
 } );
 
-describe( 'addCouponToRequestCart', function () {
-	const result = addCouponToRequestCart( cart, 'fakecoupon' );
+describe( 'addCouponToResponseCart', function () {
+	const result = addCouponToResponseCart( cart, 'fakecoupon' );
 
 	it( 'has the expected coupon', function () {
 		expect( result.coupon ).toEqual( 'fakecoupon' );
