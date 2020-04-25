@@ -21,7 +21,7 @@ import {
  * @returns Cart object suitable for passing to the checkout component
  */
 export function translateWpcomCartToCheckoutCart(
-	translate: ( string, any? ) => string,
+	translate: ( arg0: string, arg1?: any ) => string, //eslint-disable-line @typescript-eslint/no-explicit-any
 	serverCart: ResponseCart
 ): WPCOMCart {
 	const {
@@ -140,8 +140,8 @@ export function translateWpcomCartToCheckoutCart(
 function translateWpcomCartItemToCheckoutCartItem(
 	is_coupon_applied: boolean,
 	coupon_discounts_integer: number[],
-	localizeCurrency: ( string, number ) => string
-): ( ResponseCartProduct ) => WPCOMCartItem {
+	localizeCurrency: ( arg0: string, arg1: number ) => string
+): ( arg0: ResponseCartProduct ) => WPCOMCartItem {
 	return ( serverCartItem: ResponseCartProduct ) => {
 		const {
 			product_id,
