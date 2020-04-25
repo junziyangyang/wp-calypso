@@ -271,8 +271,7 @@ export function replaceItemInRequestCart(
 		...cart,
 		products: cart.products.map( ( item ) => {
 			if ( item.uuid === uuidToReplace ) {
-				item.product_id = newProductId;
-				item.product_slug = newProductSlug;
+				return { ...item, product_id: newProductId, product_slug: newProductSlug };
 			}
 			return item;
 		} ),
