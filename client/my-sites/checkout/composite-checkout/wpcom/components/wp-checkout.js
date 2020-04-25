@@ -30,6 +30,7 @@ import WPCheckoutOrderSummary from './wp-checkout-order-summary';
 import WPContactForm from './wp-contact-form';
 import { isCompleteAndValid } from '../types';
 import { WPOrderReviewTotal, WPOrderReviewSection, LineItemUI } from './wp-order-review-line-items';
+import CartFreeUserPlanUpsell from 'my-sites/checkout/cart/cart-free-user-plan-upsell';
 
 const ContactFormTitle = () => {
 	const translate = useTranslate();
@@ -130,10 +131,17 @@ export default function WPCheckout( {
 		setActiveStepNumber( 1 );
 	};
 
+	// By this point we have definitely loaded the cart using useShoppingCart
+	// so we mock the loaded property the CartStore would inject.
+	const mockCart = { ...responseCart, hasLoadedFromServer: true };
+
 	return (
 		<Checkout>
 			<CheckoutSummaryUI>
-				<WPCheckoutOrderSummary responseCart={ responseCart } addItemToCart={ addItemToCart } />
+				<WPCheckoutOrderSummary />
+				<UpsellWrapperUI>
+					<CartFreeUserPlanUpsell cart={ mockCart } addItemToCart={ addItemToCart } />
+				</UpsellWrapperUI>
 			</CheckoutSummaryUI>
 			<CheckoutStepArea>
 				<CheckoutSteps>
@@ -224,6 +232,16 @@ const CheckoutSummaryUI = styled( CheckoutSummary )`
 
 	@media ( ${( props ) => props.theme.breakpoints.desktopUp} ) {
 		display: block;
+	}
+`;
+
+const UpsellWrapperUI = styled.div`
+	margin-top: 1.5em;
+	border: 1px solid ${( props ) => props.theme.colors.borderColorLight};
+	background: ${( props ) => props.theme.colors.surface};
+
+	& .card.cart__header {
+		border: none;
 	}
 `;
 
