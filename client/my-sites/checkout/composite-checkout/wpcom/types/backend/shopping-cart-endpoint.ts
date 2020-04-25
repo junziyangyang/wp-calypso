@@ -127,10 +127,6 @@ export interface ResponseCartProduct {
 	included_domain_purchase_amount: number;
 }
 
-interface RequestCartOptions {
-	is_update?: boolean;
-}
-
 export const convertResponseCartProductToRequestCartProduct: (
 	arg0: ResponseCartProduct
 ) => RequestCartProduct = ( {
