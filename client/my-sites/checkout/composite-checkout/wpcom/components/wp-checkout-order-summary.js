@@ -11,22 +11,13 @@ import {
 } from '@automattic/composite-checkout';
 import { useTranslate } from 'i18n-calypso';
 
-/**
- * Internal dependencies
- */
-import CartFreeUserPlanUpsell from 'my-sites/checkout/cart/cart-free-user-plan-upsell';
-
-export default function WPCheckoutOrderSummary( { responseCart, addItemToCart } ) {
+export default function WPCheckoutOrderSummary() {
 	const translate = useTranslate();
 	const taxes = useLineItemsOfType( 'tax' );
 	const total = useTotal();
 
-	// By this point we have definitely loaded the cart using useShoppingCart
-	// so we mock the loaded property the CartStore would inject.
-	const mockCart = { ...responseCart, hasLoadedFromServer: true };
-
 	return (
-		<>
+		<CheckoutSummaryWrapper>
 			<CheckoutSummaryTitle>{ translate( 'Purchase Details' ) }</CheckoutSummaryTitle>
 			<CheckoutSummaryFeatures>
 				<CheckoutSummaryFeaturesTitle>
@@ -55,10 +46,23 @@ export default function WPCheckoutOrderSummary( { responseCart, addItemToCart } 
 					<span>{ renderDisplayValueMarkdown( total.amount.displayValue ) }</span>
 				</CheckoutSummaryTotal>
 			</CheckoutSummaryAmountWrapper>
-			<CartFreeUserPlanUpsell cart={ mockCart } addItemToCart={ addItemToCart } />
-		</>
+		</CheckoutSummaryWrapper>
 	);
 }
+
+const CheckoutSummaryWrapper = styled.div`
+	background: ${( props ) => props.theme.colors.surface};
+	border-bottom: 1px solid ${( props ) => props.theme.colors.borderColorLight};
+
+	@media ( ${( props ) => props.theme.breakpoints.tabletUp} ) {
+		border: 1px solid ${( props ) => props.theme.colors.borderColorLight};
+		border-bottom: none 0;
+	}
+
+	@media ( ${( props ) => props.theme.breakpoints.desktopUp} ) {
+		border: 1px solid ${( props ) => props.theme.colors.borderColorLight};
+	}
+`;
 
 const CheckoutSummaryTitle = styled.h2`
 	color: ${( props ) => props.theme.colors.textColor};
